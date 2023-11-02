@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"glicko2"
+	"github.com/hedon954/glicko2-matcher"
 )
 
 func Test_Settler(t *testing.T) {

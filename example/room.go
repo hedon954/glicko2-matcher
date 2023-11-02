@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strconv"
 
-	"glicko2"
+	"github.com/hedon954/glicko2-matcher"
 )
 
 const (

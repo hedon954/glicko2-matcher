@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"glicko2"
+	"github.com/hedon954/glicko2-matcher"
 
 	glicko "github.com/zelenin/go-glicko2"
 )

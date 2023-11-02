@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"glicko2"
+	"github.com/hedon954/glicko2-matcher"
 )
 
 func Test_Matcher(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"sync"
 
-	"glicko2"
+	"github.com/hedon954/glicko2-matcher"
 )
 
 type Team struct {
