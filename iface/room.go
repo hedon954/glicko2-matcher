@@ -10,8 +10,8 @@ type Room interface {
 	// 获取玩家中的阵营
 	Teams() []Team
 
-	//
-	GetResultTeams() []Team
+	// 通过结果排名获取阵营列表
+	SortTeamByRank() []Team
 
 	// 向房间中添加阵营
 	AddTeam(t Team)

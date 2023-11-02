@@ -1,5 +1,9 @@
 package iface
 
+import (
+	glicko "github.com/zelenin/go-glicko2"
+)
+
 // Player 是一个玩家的抽象
 type Player interface {
 
@@ -17,6 +21,7 @@ type Player interface {
 
 	// 段位值
 	Star() int
+	SetStar(star int)
 
 	// 获取参数
 	GetArgs() *Args
@@ -32,6 +37,13 @@ type Player interface {
 	GetFinishMatchTimeSec() int64
 	SetFinishMatchTimeSec(t int64)
 
+	// 赛后在阵营内的排名
+	Rank() int
+	SetRank(rank int)
+
 	// 强制退出时对每个玩家的处理逻辑
 	ForceCancelMatch()
+
+	// glicko-2 算法的玩家抽象示例
+	GlickoPlayer() *glicko.Player
 }

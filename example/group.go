@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"fmt"
@@ -46,10 +46,6 @@ func (g *Group) ID() string {
 	return g.id
 }
 
-func (g *Group) GetStartMatchTimeSec() int64 {
-	return g.startMatchTimeSec
-}
-
 func (g *Group) GetState() iface.GroupState {
 	g.RLock()
 	defer g.RUnlock()
@@ -81,9 +77,6 @@ func (g *Group) AddPlayers(players ...iface.Player) {
 		}
 		g.playersMap[p.ID()] = struct{}{}
 		g.players = append(g.players, p)
-		if g.startMatchTimeSec == 0 || g.startMatchTimeSec > p.GetStartMatchTimeSec() {
-			g.startMatchTimeSec = p.GetStartMatchTimeSec()
-		}
 	}
 }
 
@@ -211,5 +204,16 @@ func (g *Group) GetFinishMatchTimeSec() int64 {
 func (g *Group) SetFinishMatchTimeSec(t int64) {
 	for _, p := range g.players {
 		p.SetFinishMatchTimeSec(t)
+	}
+}
+
+func (g *Group) GetStartMatchTimeSec() int64 {
+	return g.startMatchTimeSec
+}
+
+func (g *Group) SetStartMatchTimeSec(t int64) {
+	g.startMatchTimeSec = t
+	for _, p := range g.players {
+		p.SetStartMatchTimeSec(t)
 	}
 }

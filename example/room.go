@@ -1,9 +1,21 @@
-package main
+package example
 
 import (
+	"sort"
 	"strconv"
 
 	"glicko2/iface"
+)
+
+const (
+	// 车队在专属队列中的匹配时长
+	NormalTeamWaitTimeSec     int64 = 5
+	UnfriendlyTeamWaitTimeSec int64 = 10
+	MaliciousTeamWaitTimeSec  int64 = 15
+
+	RoomPlayerLimit = 15 // 房间总人数
+	TeamPlayerLimit = 5  // 阵营总人数
+	RoomTeamLimit   = 3  // 房间总阵营数
 )
 
 type Room struct {
@@ -103,4 +115,11 @@ func (r *Room) HasAi() bool {
 		}
 	}
 	return false
+}
+
+func (r *Room) SortTeamByRank() []iface.Team {
+	sort.SliceStable(r.teams, func(i, j int) bool {
+		return r.teams[i].Rank() < r.teams[j].Rank()
+	})
+	return r.teams
 }

@@ -96,6 +96,11 @@ func (q *Queue) AddGroups(gs ...iface.Group) {
 	q.Lock()
 	defer q.Unlock()
 
+	for _, g := range gs {
+		if g.GetStartMatchTimeSec() == 0 {
+			g.SetStartMatchTimeSec(time.Now().Unix())
+		}
+	}
 	q.Groups = append(q.Groups, gs...)
 }
 

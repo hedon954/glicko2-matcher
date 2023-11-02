@@ -60,6 +60,7 @@ type Group interface {
 
 	// 开始匹配的时间，取 player 中最早的
 	GetStartMatchTimeSec() int64
+	SetStartMatchTimeSec(t int64)
 
 	// 结束匹配的时间
 	GetFinishMatchTimeSec() int64

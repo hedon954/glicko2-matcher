@@ -1,10 +1,12 @@
-package main
+package example
 
 import (
 	"errors"
 	"sync"
 
 	"glicko2/iface"
+
+	glicko "github.com/zelenin/go-glicko2"
 )
 
 type Player struct {
@@ -19,9 +21,12 @@ type Player struct {
 	V   float64
 
 	rank int
+	star int
 
 	startMatchTime  int64
 	finishMatchTime int64
+
+	*glicko.Player
 }
 
 func NewPlayer(id string, isAi bool, aiLevel int64, args iface.Args) iface.Player {
@@ -42,7 +47,12 @@ func NewPlayer(id string, isAi bool, aiLevel int64, args iface.Args) iface.Playe
 		mmr:     args.MMR,
 		RD:      args.DR,
 		V:       args.V,
+		Player:  glicko.NewPlayer(glicko.NewRating(args.MMR, args.DR, args.V)),
 	}
+}
+
+func (p *Player) GlickoPlayer() *glicko.Player {
+	return p.Player
 }
 
 func (p *Player) IsAi() bool {
@@ -80,7 +90,7 @@ func (p *Player) MMR() float64 {
 }
 
 func (p *Player) Star() int {
-	return p.rank
+	return p.star
 }
 
 func (p *Player) GetArgs() *iface.Args {
@@ -107,9 +117,22 @@ func (p *Player) SetArgs(args *iface.Args) error {
 	p.V = args.V
 	p.mmr = args.MMR
 	p.RD = args.DR
+	p.Player = glicko.NewPlayer(glicko.NewRating(args.MMR, args.DR, args.V))
 	return nil
 }
 
 func (p *Player) ForceCancelMatch() {
 	// TODO
+}
+
+func (p *Player) SetStar(star int) {
+	p.star = star
+}
+
+func (p *Player) Rank() int {
+	return p.rank
+}
+
+func (p *Player) SetRank(rank int) {
+	p.rank = rank
 }

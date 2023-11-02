@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"fmt"
@@ -6,24 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"sync/atomic"
+	"testing"
 	"time"
 
 	"glicko2"
 	"glicko2/iface"
 )
 
-const (
-	// 车队在专属队列中的匹配时长
-	NormalTeamWaitTimeSec     int64 = 5
-	UnfriendlyTeamWaitTimeSec int64 = 10
-	MaliciousTeamWaitTimeSec  int64 = 15
-
-	RoomPlayerLimit = 15 // 房间总人数
-	TeamPlayerLimit = 5  // 阵营总人数
-	RoomTeamLimit   = 3  // 房间总阵营数
-)
-
-func main() {
+func Test_Matcher(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	var roomId = atomic.Int64{}
@@ -79,7 +69,6 @@ func main() {
 						DR:  0,
 						V:   0,
 					})
-				p.SetStartMatchTimeSec(time.Now().Unix())
 				players = append(players, p)
 			}
 			newGroup := NewGroup(fmt.Sprintf("Group%d", i+1), players)

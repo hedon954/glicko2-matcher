@@ -1,6 +1,7 @@
-package main
+package example
 
 import (
+	"sort"
 	"sync"
 
 	"glicko2/iface"
@@ -11,6 +12,7 @@ type Team struct {
 
 	groups            map[string]iface.Group
 	StartMatchTimeSec int64
+	rank              int
 }
 
 func NewTeam() iface.Team {
@@ -31,6 +33,9 @@ func (t *Team) Groups() []iface.Group {
 }
 
 func (t *Team) AddGroup(g iface.Group) {
+	if g.GetState() != iface.GroupStateQueuing {
+		return
+	}
 	t.groups[g.ID()] = g
 	gmst := g.GetStartMatchTimeSec()
 	if gmst == 0 {
@@ -101,4 +106,23 @@ func (t *Team) IsAi() bool {
 		}
 	}
 	return false
+}
+
+func (t *Team) Rank() int {
+	return t.rank
+}
+
+func (t *Team) SetRank(rank int) {
+	t.rank = rank
+}
+
+func (t *Team) SortPlayerByRank() []iface.Player {
+	players := make([]iface.Player, 0, 5)
+	for _, g := range t.groups {
+		players = append(players, g.Players()...)
+	}
+	sort.SliceStable(players, func(i, j int) bool {
+		return players[i].Rank() < players[j].Rank()
+	})
+	return players
 }
