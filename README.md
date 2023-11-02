@@ -16,7 +16,9 @@
 
 
 ## Hou To Use
-
+```shell
+go get github.com/hedon954/glicko2-matcher
+```
 1. Implement Player, Group, Team and Room interfaces according to your business needs.
 2. Create a Macther by `NewMatcher()`, and run `matcher.Start()` to start matching.
 3. When the Group starts to match, call `matcher.AddGroups(groups...)` to add the team to the matching queue and wait for the matching result.
