@@ -20,4 +20,4 @@
 1. Implement Player, Group, Team and Room interfaces according to your business needs.
 2. Create a Macther by `NewMatcher()`, and run `matcher.Start()` to start matching.
 3. When the Group starts to match, call `matcher.AddGroups(groups...)` to add the team to the matching queue and wait for the matching result.
-4. When the game is over, update the `Rank` of the Team and each Player based on the result, then call `SetTler.UpdateMMR(room)`.
+4. When the game is over, update the `Rank` of the Team and each Player based on the result, then call `Settler.UpdateMMR(room)`.
