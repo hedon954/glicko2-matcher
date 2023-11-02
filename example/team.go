@@ -4,26 +4,26 @@ import (
 	"sort"
 	"sync"
 
-	"glicko2/iface"
+	"glicko2"
 )
 
 type Team struct {
 	sync.RWMutex
 
-	groups            map[string]iface.Group
+	groups            map[string]glicko2.Group
 	StartMatchTimeSec int64
 	rank              int
 }
 
-func NewTeam() iface.Team {
+func NewTeam() glicko2.Team {
 	return &Team{
 		RWMutex: sync.RWMutex{},
-		groups:  make(map[string]iface.Group),
+		groups:  make(map[string]glicko2.Group),
 	}
 }
 
-func (t *Team) Groups() []iface.Group {
-	res := make([]iface.Group, len(t.groups))
+func (t *Team) Groups() []glicko2.Group {
+	res := make([]glicko2.Group, len(t.groups))
 	i := 0
 	for _, g := range t.groups {
 		res[i] = g
@@ -32,8 +32,8 @@ func (t *Team) Groups() []iface.Group {
 	return res
 }
 
-func (t *Team) AddGroup(g iface.Group) {
-	if g.GetState() != iface.GroupStateQueuing {
+func (t *Team) AddGroup(g glicko2.Group) {
+	if g.GetState() != glicko2.GroupStateQueuing {
 		return
 	}
 	t.groups[g.ID()] = g
@@ -116,8 +116,8 @@ func (t *Team) SetRank(rank int) {
 	t.rank = rank
 }
 
-func (t *Team) SortPlayerByRank() []iface.Player {
-	players := make([]iface.Player, 0, 5)
+func (t *Team) SortPlayerByRank() []glicko2.Player {
+	players := make([]glicko2.Player, 0, 5)
 	for _, g := range t.groups {
 		players = append(players, g.Players()...)
 	}

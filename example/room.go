@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strconv"
 
-	"glicko2/iface"
+	"glicko2"
 )
 
 const (
@@ -20,31 +20,31 @@ const (
 
 type Room struct {
 	id              int64
-	teams           []iface.Team
+	teams           []glicko2.Team
 	StartMatchTime  int64
 	FinishMatchTime int64
 }
 
-func NewRoom() iface.Room {
+func NewRoom() glicko2.Room {
 	return &Room{
-		teams: make([]iface.Team, 0, 3),
+		teams: make([]glicko2.Team, 0, 3),
 	}
 }
 
-func NewRoomWithAi(team iface.Team) iface.Room {
+func NewRoomWithAi(team glicko2.Team) glicko2.Room {
 	newRoom := NewRoom()
 	newRoom.AddTeam(team)
 	// TODO: 根据实际规则填充 ai
 	aiT1 := NewTeam()
 	ai1G := NewGroup("ai-group-0", nil)
 	for i := 0; i < TeamPlayerLimit; i++ {
-		ai1G.AddPlayers(NewPlayer("ai-player-0-"+strconv.Itoa(i), true, int64(i+1), iface.Args{}))
+		ai1G.AddPlayers(NewPlayer("ai-player-0-"+strconv.Itoa(i), true, int64(i+1), glicko2.Args{}))
 	}
 	aiT1.AddGroup(ai1G)
 	aiT2 := NewTeam()
 	ai2G := NewGroup("ai-group-1", nil)
 	for i := 0; i < TeamPlayerLimit; i++ {
-		ai2G.AddPlayers(NewPlayer("ai-player-1-"+strconv.Itoa(i), true, int64(i+1), iface.Args{}))
+		ai2G.AddPlayers(NewPlayer("ai-player-1-"+strconv.Itoa(i), true, int64(i+1), glicko2.Args{}))
 	}
 	aiT2.AddGroup(ai2G)
 	newRoom.AddTeam(aiT1)
@@ -60,11 +60,11 @@ func (r *Room) SetID(rid int64) {
 	r.id = rid
 }
 
-func (r *Room) Teams() []iface.Team {
+func (r *Room) Teams() []glicko2.Team {
 	return r.teams
 }
 
-func (r *Room) AddTeam(t iface.Team) {
+func (r *Room) AddTeam(t glicko2.Team) {
 	r.teams = append(r.teams, t)
 	tmst := t.GetStartMatchTimeSec()
 	if tmst == 0 {
@@ -75,7 +75,7 @@ func (r *Room) AddTeam(t iface.Team) {
 	}
 }
 
-func (r *Room) RemoveTeam(t iface.Team) {
+func (r *Room) RemoveTeam(t glicko2.Team) {
 	for i, rt := range r.teams {
 		if rt == t {
 			r.teams = append(r.teams[:i], r.teams[i+1:]...)
@@ -117,7 +117,7 @@ func (r *Room) HasAi() bool {
 	return false
 }
 
-func (r *Room) SortTeamByRank() []iface.Team {
+func (r *Room) SortTeamByRank() []glicko2.Team {
 	sort.SliceStable(r.teams, func(i, j int) bool {
 		return r.teams[i].Rank() < r.teams[j].Rank()
 	})

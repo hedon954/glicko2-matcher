@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"glicko2"
-	"glicko2/iface"
 )
 
 func Test_Matcher(t *testing.T) {
@@ -18,7 +17,7 @@ func Test_Matcher(t *testing.T) {
 
 	var roomId = atomic.Int64{}
 
-	roomChan := make(chan iface.Room, 128)
+	roomChan := make(chan glicko2.Room, 128)
 
 	queueArgs := glicko2.QueueArgs{
 		RoomPlayerLimit:           RoomPlayerLimit,
@@ -60,11 +59,11 @@ func Test_Matcher(t *testing.T) {
 	// 异步随机生成 group
 	go func() {
 		for i := 0; i < 100; i++ {
-			var players []iface.Player
+			var players []glicko2.Player
 			count := rand.Intn(5) + 1
 			for j := 0; j < count; j++ {
 				p := NewPlayer("", false, 0,
-					iface.Args{
+					glicko2.Args{
 						MMR: float64(rand.Intn(3000)),
 						DR:  0,
 						V:   0,
@@ -97,7 +96,7 @@ func Test_Matcher(t *testing.T) {
 				fmt.Printf("|   Team %d average mmr: %.2f, isAi: %t, cost time %ds\n", j+1,
 					team.AverageMMR(), team.IsAi(), now-team.GetStartMatchTimeSec())
 				for _, group := range team.Groups() {
-					group.SetState(iface.GroupStateMatched)
+					group.SetState(glicko2.GroupStateMatched)
 					fmt.Printf("|     %s mmr: %.2f, player count: %d, team type: %d, cost time %ds\n", group.ID(),
 						group.MMR(),
 						len(group.Players()), group.Type(),
@@ -107,21 +106,21 @@ func Test_Matcher(t *testing.T) {
 			fmt.Println("-------------------------------------------------------------------")
 			fmt.Println()
 		case <-ch:
-			qm.Stop()
+			gs1, gs2 := qm.Stop()
 
 			fmt.Println()
 			fmt.Println()
 			fmt.Println("--------------- finish --------------")
 
-			fmt.Println("normal queue left group count:", len(qm.NormalQueue.AllGroups()))
+			fmt.Println("normal queue left group count:", len(gs1))
 			fmt.Printf("\t\tGroupId\t\t\tPlayerCount\t\tmmr\t\tAvgMMR\t\tMatchTime\t\t\n")
-			for _, g := range qm.NormalQueue.SortedGroups() {
+			for _, g := range gs1 {
 				g.Print()
 			}
 			fmt.Println()
-			fmt.Println("team queue left group count:", len(qm.TeamQueue.AllGroups()))
+			fmt.Println("team queue left group count:", len(gs2))
 			fmt.Printf("\t\tGroupId\t\t\tPlayerCount\t\tmmr\t\tAvgMMR\t\tMatchTime\t\t\n")
-			for _, g := range qm.TeamQueue.SortedGroups() {
+			for _, g := range gs2 {
 				g.Print()
 
 			}

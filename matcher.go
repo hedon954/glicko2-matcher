@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"glicko2/iface"
 )
 
 const (
@@ -22,11 +20,11 @@ type Matcher struct {
 
 // NewMatcher 是一个匹配器，包含了 TeamQueue 和 NormalQueue 两个匹配队列
 func NewMatcher(
-	roomChan chan iface.Room,
+	roomChan chan Room,
 	queueArgs QueueArgs,
-	newTeamFunc func() iface.Team,
-	newRoomFunc func() iface.Room,
-	newRoomWithAiFunc func(team iface.Team) iface.Room,
+	newTeamFunc func() Team,
+	newRoomFunc func() Room,
+	newRoomWithAiFunc func(team Team) Room,
 ) *Matcher {
 	return &Matcher{
 		quitChan:    make(chan struct{}),
@@ -36,11 +34,11 @@ func NewMatcher(
 }
 
 // AddGroups 添加队伍
-func (qm *Matcher) AddGroups(gs ...iface.Group) {
+func (qm *Matcher) AddGroups(gs ...Group) {
 	for _, g := range gs {
 		groupType := g.Type()
-		g.SetState(iface.GroupStateQueuing)
-		if groupType == iface.GroupTypeNotTeam {
+		g.SetState(GroupStateQueuing)
+		if groupType == GroupTypeNotTeam {
 			qm.NormalQueue.AddGroups(g)
 		} else {
 			qm.TeamQueue.AddGroups(g)
@@ -78,15 +76,15 @@ func (qm *Matcher) Match() {
 				needMove := false
 				matchTime := now.Unix() - g.GetStartMatchTimeSec()
 				switch g.Type() {
-				case iface.GroupTypeMaliciousTeam:
+				case GroupTypeMaliciousTeam:
 					if matchTime >= qm.TeamQueue.MaliciousTeamWaitTimeSec {
 						needMove = true
 					}
-				case iface.GroupTypeUnfriendlyTeam:
+				case GroupTypeUnfriendlyTeam:
 					if matchTime >= qm.TeamQueue.UnfriendlyTeamWaitTimeSec {
 						needMove = true
 					}
-				case iface.GroupTypeNormalTeam:
+				case GroupTypeNormalTeam:
 					if matchTime >= qm.TeamQueue.NormalTeamWaitTimeSec {
 						needMove = true
 					}
@@ -111,8 +109,9 @@ func (qm *Matcher) Match() {
 	}
 }
 
-func (qm *Matcher) Stop() {
-	qm.NormalQueue.stopMatch()
-	qm.TeamQueue.stopMatch()
+func (qm *Matcher) Stop() ([]Group, []Group) {
+	gs1 := qm.NormalQueue.stopMatch()
+	gs2 := qm.TeamQueue.stopMatch()
 	qm.quitChan <- struct{}{}
+	return gs1, gs2
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"glicko2"
-	"glicko2/iface"
 )
 
 func Test_Settler(t *testing.T) {
@@ -15,9 +14,9 @@ func Test_Settler(t *testing.T) {
 		team := NewTeam()
 		team.SetRank(i + 1)
 		group := NewGroup(fmt.Sprintf("team-%d-group", i+1), nil)
-		group.SetState(iface.GroupStateQueuing)
+		group.SetState(glicko2.GroupStateQueuing)
 		for j := 0; j < 5; j++ {
-			player := NewPlayer(fmt.Sprintf("team-%d-player-%d", i+1, j+1), false, 0, iface.Args{
+			player := NewPlayer(fmt.Sprintf("team-%d-player-%d", i+1, j+1), false, 0, glicko2.Args{
 				MMR: 1500,
 				DR:  200,
 				V:   0.06,

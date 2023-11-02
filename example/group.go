@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"glicko2/iface"
+	"glicko2"
 
 	"github.com/montanaflynn/stats"
 )
@@ -20,18 +20,18 @@ type Group struct {
 	sync.RWMutex
 
 	id         string
-	state      iface.GroupState
+	state      glicko2.GroupState
 	playersMap map[string]struct{}
-	players    []iface.Player
+	players    []glicko2.Player
 
 	startMatchTimeSec int64
 }
 
-func NewGroup(id string, players []iface.Player) iface.Group {
+func NewGroup(id string, players []glicko2.Player) glicko2.Group {
 	g := &Group{
 		RWMutex:    sync.RWMutex{},
 		id:         id,
-		state:      iface.GroupStateUnready,
+		state:      glicko2.GroupStateUnready,
 		playersMap: make(map[string]struct{}),
 		players:    players,
 	}
@@ -46,27 +46,27 @@ func (g *Group) ID() string {
 	return g.id
 }
 
-func (g *Group) GetState() iface.GroupState {
+func (g *Group) GetState() glicko2.GroupState {
 	g.RLock()
 	defer g.RUnlock()
 
 	return g.state
 }
 
-func (g *Group) SetState(state iface.GroupState) {
+func (g *Group) SetState(state glicko2.GroupState) {
 	g.Lock()
 	defer g.Unlock()
 
 	g.state = state
 }
 
-func (g *Group) Players() []iface.Player {
+func (g *Group) Players() []glicko2.Player {
 	g.RLock()
 	defer g.RUnlock()
 	return g.players
 }
 
-func (g *Group) AddPlayers(players ...iface.Player) {
+func (g *Group) AddPlayers(players ...glicko2.Player) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -80,7 +80,7 @@ func (g *Group) AddPlayers(players ...iface.Player) {
 	}
 }
 
-func (g *Group) RemovePlayer(player iface.Player) {
+func (g *Group) RemovePlayer(player glicko2.Player) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -128,14 +128,14 @@ func (g *Group) BiggestMMR() float64 {
 func (g *Group) MMR() float64 {
 	teamType := g.Type()
 	switch teamType {
-	case iface.GroupTypeUnfriendlyTeam:
+	case glicko2.GroupTypeUnfriendlyTeam:
 		mmr := g.AverageMMR() * 1.5
 		bMmr := g.BiggestMMR()
 		if mmr > bMmr {
 			mmr = bMmr
 		}
 		return mmr
-	case iface.GroupTypeMaliciousTeam:
+	case glicko2.GroupTypeMaliciousTeam:
 		return g.BiggestMMR()
 	default:
 		return g.AverageMMR()
@@ -165,17 +165,17 @@ func (g *Group) MMRVariance() float64 {
 }
 
 // Type 确定车队类型
-func (g *Group) Type() iface.GroupType {
+func (g *Group) Type() glicko2.GroupType {
 	if len(g.players) != 5 {
-		return iface.GroupTypeNotTeam
+		return glicko2.GroupTypeNotTeam
 	}
 	variance := g.MMRVariance()
 	if variance >= MaliciousTeamVarianceMin {
-		return iface.GroupTypeMaliciousTeam
+		return glicko2.GroupTypeMaliciousTeam
 	} else if variance >= UnfriendlyTeamVarianceMin {
-		return iface.GroupTypeUnfriendlyTeam
+		return glicko2.GroupTypeUnfriendlyTeam
 	} else {
-		return iface.GroupTypeNormalTeam
+		return glicko2.GroupTypeNormalTeam
 	}
 }
 

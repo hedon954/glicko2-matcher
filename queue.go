@@ -5,8 +5,6 @@ import (
 	"sort"
 	"sync"
 	"time"
-
-	"glicko2/iface"
 )
 
 const (
@@ -17,15 +15,15 @@ const (
 // Queue 是一个匹配队列
 type Queue struct {
 	sync.Mutex
-	Name          string                           // 队列名称
-	Groups        []iface.Group                    // 在队列中的队伍，对于 Groups 的所有处理都要加锁
-	tmpTeam       []iface.Team                     // 匹配过程中的临时阵营，每 5 轮匹配后会打散重来，只能在 Match 中调用，不可以并发调用
-	tmpRoom       []iface.Room                     // 匹配过程中的临时房间，每 5 轮匹配后会打散重来，只能在 Match 中调用，不可以并发调用
-	roomChan      chan iface.Room                  // 匹配成功的房间会投进这个 channel
-	newTeam       func() iface.Team                // 构建新 team 的方法
-	newRoom       func() iface.Room                // 构建新 room 的方法
-	newRoomWithAi func(team iface.Team) iface.Room // 构建带 ai 的新 room 的方法
-	matchTurn     int                              // 匹配轮次，对 5 取模
+	Name          string               // 队列名称
+	Groups        []Group              // 在队列中的队伍，对于 Groups 的所有处理都要加锁
+	tmpTeam       []Team               // 匹配过程中的临时阵营，每 5 轮匹配后会打散重来，只能在 Match 中调用，不可以并发调用
+	tmpRoom       []Room               // 匹配过程中的临时房间，每 5 轮匹配后会打散重来，只能在 Match 中调用，不可以并发调用
+	roomChan      chan Room            // 匹配成功的房间会投进这个 channel
+	newTeam       func() Team          // 构建新 team 的方法
+	newRoom       func() Room          // 构建新 room 的方法
+	newRoomWithAi func(team Team) Room // 构建带 ai 的新 room 的方法
+	matchTurn     int                  // 匹配轮次，对 5 取模
 
 	QueueArgs
 }
@@ -57,17 +55,17 @@ var defaultMatchRange = MatchRange{
 }
 
 func NewQueue(
-	name string, roomChan chan iface.Room, args QueueArgs, newTeamFunc func() iface.Team,
-	newRoomFunc func() iface.Room,
-	newRoomWithAiFunc func(team iface.Team) iface.Room,
+	name string, roomChan chan Room, args QueueArgs, newTeamFunc func() Team,
+	newRoomFunc func() Room,
+	newRoomWithAiFunc func(team Team) Room,
 ) *Queue {
 	return &Queue{
 		Mutex:         sync.Mutex{},
 		Name:          name,
 		roomChan:      roomChan,
-		Groups:        make([]iface.Group, 0, 128),
-		tmpTeam:       make([]iface.Team, 0, 128),
-		tmpRoom:       make([]iface.Room, 0, 128),
+		Groups:        make([]Group, 0, 128),
+		tmpTeam:       make([]Team, 0, 128),
+		tmpRoom:       make([]Room, 0, 128),
 		newTeam:       newTeamFunc,
 		newRoom:       newRoomFunc,
 		newRoomWithAi: newRoomWithAiFunc,
@@ -75,7 +73,7 @@ func NewQueue(
 	}
 }
 
-func (q *Queue) SortedGroups() []iface.Group {
+func (q *Queue) SortedGroups() []Group {
 	q.Lock()
 	defer q.Unlock()
 
@@ -85,14 +83,14 @@ func (q *Queue) SortedGroups() []iface.Group {
 	return q.Groups
 }
 
-func (q *Queue) AllGroups() []iface.Group {
+func (q *Queue) AllGroups() []Group {
 	q.Lock()
 	defer q.Unlock()
 
 	return q.Groups
 }
 
-func (q *Queue) AddGroups(gs ...iface.Group) {
+func (q *Queue) AddGroups(gs ...Group) {
 	q.Lock()
 	defer q.Unlock()
 
@@ -105,23 +103,23 @@ func (q *Queue) AddGroups(gs ...iface.Group) {
 }
 
 // GetAndClearGroups 取出要匹配的 group 并且清空当前 groups 列表
-func (q *Queue) GetAndClearGroups() []iface.Group {
+func (q *Queue) GetAndClearGroups() []Group {
 	q.Lock()
 	defer q.Unlock()
 
-	res := make([]iface.Group, 0, len(q.Groups))
+	res := make([]Group, 0, len(q.Groups))
 	for _, g := range q.Groups {
-		if g.GetState() == iface.GroupStateQueuing {
+		if g.GetState() == GroupStateQueuing {
 			res = append(res, g)
 		}
 	}
-	q.Groups = make([]iface.Group, 0, 128)
+	q.Groups = make([]Group, 0, 128)
 	return res
 }
 
 // clearTmp 清除 tmpRoom 和 tmpTeam 并归位 groups
-func (q *Queue) clearTmp() []iface.Group {
-	groups := make([]iface.Group, 0, 128)
+func (q *Queue) clearTmp() []Group {
+	groups := make([]Group, 0, 128)
 	for _, t := range q.tmpTeam {
 		groups = append(groups, t.Groups()...)
 	}
@@ -130,13 +128,13 @@ func (q *Queue) clearTmp() []iface.Group {
 			groups = append(groups, rt.Groups()...)
 		}
 	}
-	q.tmpTeam = make([]iface.Team, 0, 128)
-	q.tmpRoom = make([]iface.Room, 0, 128)
+	q.tmpTeam = make([]Team, 0, 128)
+	q.tmpRoom = make([]Room, 0, 128)
 	return groups
 }
 
 // Match 队列匹配逻辑
-func (q *Queue) Match(groups []iface.Group) []iface.Group {
+func (q *Queue) Match(groups []Group) []Group {
 	var tmpTeam = q.tmpTeam
 	var tmpRoom = q.tmpRoom
 
@@ -250,12 +248,12 @@ func (q *Queue) Match(groups []iface.Group) []iface.Group {
 		}
 
 		// 整理房间信息
-		newTmpRoom := make([]iface.Room, 0)
+		newTmpRoom := make([]Room, 0)
 		for _, tr := range tmpRoom {
 			if len(tr.Teams()) == q.RoomTeamLimit {
 				now := time.Now().Unix()
 				tr.SetFinishMatchTimeSec(now)
-				go func(room iface.Room) {
+				go func(room Room) {
 					q.roomChan <- room
 				}(tr)
 				continue
@@ -280,7 +278,7 @@ func (q *Queue) Match(groups []iface.Group) []iface.Group {
 }
 
 // findGroupForTeam 从 groups 中找到适合 team 的 group 并加入其中
-func (q *Queue) findGroupForTeam(team iface.Team, groups []iface.Group) ([]iface.Group, bool) {
+func (q *Queue) findGroupForTeam(team Team, groups []Group) ([]Group, bool) {
 	// 第1个队伍直接进
 	if team.PlayerCount() == 0 && len(groups) > 0 {
 		team.AddGroup(groups[0])
@@ -319,7 +317,7 @@ func (q *Queue) findGroupForTeam(team iface.Team, groups []iface.Group) ([]iface
 }
 
 // findTeamForRoom 从 tmpTeam 中找到合适 room 的 team 并加入其中
-func (q *Queue) findTeamForRoom(room iface.Room, tmpTeam []iface.Team) ([]iface.Team, bool) {
+func (q *Queue) findTeamForRoom(room Room, tmpTeam []Team) ([]Team, bool) {
 	for tPos, tt := range tmpTeam {
 		if len(room.Teams()) >= q.RoomTeamLimit {
 			break
@@ -347,7 +345,7 @@ func (q *Queue) findTeamForRoom(room iface.Room, tmpTeam []iface.Team) ([]iface.
 }
 
 // canGroupTogether 判断队伍之间是否可以组成一个阵营
-func (q *Queue) canGroupTogether(team iface.Team, group iface.Group) bool {
+func (q *Queue) canGroupTogether(team Team, group Group) bool {
 	for _, g := range team.Groups() {
 		mr := q.getMatchRange(g.GetStartMatchTimeSec(), group.GetStartMatchTimeSec())
 
@@ -371,7 +369,7 @@ func (q *Queue) canGroupTogether(team iface.Team, group iface.Group) bool {
 }
 
 // canTeamTogether 判断阵营之间是否可以组成一个房间
-func (q *Queue) canTeamTogether(room iface.Room, tt iface.Team) bool {
+func (q *Queue) canTeamTogether(room Room, tt Team) bool {
 	// 判断 tt 是否满足跟当前 room 中的所有 team 匹配的条件
 	// 只要有一个不满足，就返回 false
 	for _, t := range room.Teams() {
@@ -414,14 +412,14 @@ func (q *Queue) getMatchRange(mst1, mst2 int64) MatchRange {
 }
 
 // stopMatch 取消匹配
-func (q *Queue) stopMatch() {
+func (q *Queue) stopMatch() []Group {
 	q.Lock()
 	defer q.Unlock()
 
 	groups := q.clearTmp()
 	q.Groups = append(q.Groups, groups...)
 	for _, g := range q.Groups {
-		if g.GetState() != iface.GroupStateQueuing {
+		if g.GetState() != GroupStateQueuing {
 			continue
 		}
 		for _, p := range g.Players() {
@@ -429,7 +427,8 @@ func (q *Queue) stopMatch() {
 				p.ForceCancelMatch()
 			}
 		}
-		g.SetState(iface.GroupStateUnready)
+		g.SetState(GroupStateUnready)
 	}
-	q.Groups = make([]iface.Group, 0)
+	q.Groups = make([]Group, 0)
+	return groups
 }

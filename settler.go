@@ -3,15 +3,13 @@ package glicko2
 import (
 	"fmt"
 
-	"glicko2/iface"
-
 	glicko "github.com/zelenin/go-glicko2"
 )
 
 // Settler 游戏结算器
 type Settler struct{}
 
-func (s *Settler) UpdateMMR(room iface.Room) {
+func (s *Settler) UpdateMMR(room Room) {
 
 	// 开启一个 glicko-2 计算周期
 	period := glicko.NewRatingPeriod()
@@ -76,7 +74,7 @@ func (s *Settler) UpdateMMR(room iface.Room) {
 				continue
 			}
 			rating := players[i].GlickoPlayer().Rating()
-			_ = players[i].SetArgs(&iface.Args{
+			_ = players[i].SetArgs(&Args{
 				MMR: rating.R(),
 				DR:  rating.Rd(),
 				V:   rating.Sigma(),

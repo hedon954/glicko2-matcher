@@ -1,4 +1,4 @@
-package iface
+package glicko2
 
 // Team 是一个阵营的抽象，由 1~n 个 Group 组成
 type Team interface {

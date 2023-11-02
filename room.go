@@ -1,4 +1,4 @@
-package iface
+package glicko2
 
 // Room 是一个房间的抽象，由多个 team 组成
 type Room interface {

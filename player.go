@@ -1,4 +1,4 @@
-package iface
+package glicko2
 
 import (
 	glicko "github.com/zelenin/go-glicko2"

@@ -1,4 +1,4 @@
-package iface
+package glicko2
 
 // GroupState队伍状态
 type GroupState uint8

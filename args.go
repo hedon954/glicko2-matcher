@@ -1,4 +1,4 @@
-package iface
+package glicko2
 
 // Args 封装了 glicko-2 算法的 3 个核心参数
 type Args struct {

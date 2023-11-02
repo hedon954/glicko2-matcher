@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"glicko2/iface"
+	"glicko2"
 
 	glicko "github.com/zelenin/go-glicko2"
 )
@@ -29,7 +29,7 @@ type Player struct {
 	*glicko.Player
 }
 
-func NewPlayer(id string, isAi bool, aiLevel int64, args iface.Args) iface.Player {
+func NewPlayer(id string, isAi bool, aiLevel int64, args glicko2.Args) glicko2.Player {
 	/**
 	TODO:
 	算法刚启动的时候，会手动配置不同段位的补偿分数，把各个段位的分数人工区分初始化玩家的 mmr，rd 和 v，
@@ -93,7 +93,7 @@ func (p *Player) Star() int {
 	return p.star
 }
 
-func (p *Player) GetArgs() *iface.Args {
+func (p *Player) GetArgs() *glicko2.Args {
 	p.RLock()
 	defer p.RUnlock()
 	/**
@@ -101,14 +101,14 @@ func (p *Player) GetArgs() *iface.Args {
 	赛季初始 5 局过后，mmr 分数开始生效；生效前沿用上赛季分数进行匹配。
 	新玩家和回流玩家会进入保护期，分数不计算，对局全部按照最低分进行匹配，直到完成10次团战对局，开始使用真实分数进行匹配。
 	*/
-	return &iface.Args{
+	return &glicko2.Args{
 		MMR: p.mmr,
 		DR:  p.RD,
 		V:   p.V,
 	}
 }
 
-func (p *Player) SetArgs(args *iface.Args) error {
+func (p *Player) SetArgs(args *glicko2.Args) error {
 	if args == nil {
 		return errors.New("args is nil")
 	}
