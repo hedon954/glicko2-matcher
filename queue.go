@@ -44,14 +44,14 @@ type MatchRange struct {
 	MaxMatchSec   int64 // 最长匹配时间s（不包含）
 	MMRGapPercent int   // 允许的 mmr 差距百分比(0~100)（包含），0 表示无限制
 	CanJoinTeam   bool  // 是否加入 5 人车队
-	RankGap       int   // 允许的段位差距数（包含），0 表示无限制
+	StarGap       int   // 允许的段位差距数（包含），0 表示无限制
 }
 
 var defaultMatchRange = MatchRange{
 	MaxMatchSec:   15,
 	MMRGapPercent: 10,
 	CanJoinTeam:   false,
-	RankGap:       12,
+	StarGap:       12,
 }
 
 func NewQueue(
@@ -361,7 +361,7 @@ func (q *Queue) canGroupTogether(team Team, group Group) bool {
 		}
 
 		// 段位是否匹配
-		if mr.RankGap != 0 && int(math.Abs(float64(g.Star()-group.Star()))) > mr.RankGap {
+		if mr.StarGap != 0 && int(math.Abs(float64(g.Star()-group.Star()))) > mr.StarGap {
 			return false
 		}
 	}
@@ -386,7 +386,7 @@ func (q *Queue) canTeamTogether(room Room, tt Team) bool {
 		}
 
 		// 段位是否匹配
-		if mr.RankGap != 0 && int(math.Abs(float64(t.Star()-tt.Star()))) > mr.RankGap {
+		if mr.StarGap != 0 && int(math.Abs(float64(t.Star()-tt.Star()))) > mr.StarGap {
 			return false
 		}
 	}
