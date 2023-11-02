@@ -122,8 +122,8 @@ func Test_Matcher(t *testing.T) {
 			fmt.Printf("\t\tGroupId\t\t\tPlayerCount\t\tmmr\t\tAvgMMR\t\tMatchTime\t\t\n")
 			for _, g := range gs2 {
 				g.Print()
-
 			}
+			return
 		default:
 			time.Sleep(100 * time.Millisecond)
 		}
