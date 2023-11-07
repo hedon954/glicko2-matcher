@@ -121,7 +121,7 @@ func (p *Player) SetArgs(args *glicko2.Args) error {
 	return nil
 }
 
-func (p *Player) ForceCancelMatch() {
+func (p *Player) ForceCancelMatch(reason string) {
 	// TODO
 }
 

@@ -10,6 +10,9 @@ import (
 const (
 	// 每 5 轮会将 tmpRoom 和 tmpTeam 清空并打散重新匹配
 	refreshTurn = 5
+
+	CancelMatchByServerStop = "Failed to match. Please try again later"
+	CancelMatchByTimeout    = "No team found, please try again later"
 )
 
 // Queue 是一个匹配队列
@@ -29,13 +32,15 @@ type Queue struct {
 }
 
 type QueueArgs struct {
+	MatchTimeoutSec int64 // 匹配超时时间
+
 	RoomPlayerLimit int // 房间总人数上线
 	TeamPlayerLimit int // 阵营总人数上限
 	RoomTeamLimit   int // 房间总阵营数
 
 	NormalTeamWaitTimeSec     int64 // 普通车队在专属队列中的匹配时长
-	UnfriendlyTeamWaitTimeSec int64 // 不友好车队在匹配队列中的匹配时长
-	MaliciousTeamWaitTimeSec  int64 // 恶意车队在匹配队列中的匹配时长
+	UnfriendlyTeamWaitTimeSec int64 // 不友好车队在专属队列中的匹配时长
+	MaliciousTeamWaitTimeSec  int64 // 恶意车队在专属队列中的匹配时长
 
 	MatchRanges []MatchRange // 匹配范围策略
 }
@@ -107,9 +112,20 @@ func (q *Queue) GetAndClearGroups() []Group {
 	q.Lock()
 	defer q.Unlock()
 
+	now := time.Now().Unix()
 	res := make([]Group, 0, len(q.Groups))
 	for _, g := range q.Groups {
+		// 只要还在匹配中的队伍
 		if g.GetState() == GroupStateQueuing {
+			// 去掉超时的队伍
+			if q.MatchTimeoutSec != 0 && now-g.GetStartMatchTimeSec() >= q.MatchTimeoutSec {
+				for _, p := range g.Players() {
+					tmpP := p
+					go tmpP.ForceCancelMatch(CancelMatchByTimeout)
+				}
+				g.SetState(GroupStateUnready)
+				continue
+			}
 			res = append(res, g)
 		}
 	}
@@ -424,7 +440,7 @@ func (q *Queue) stopMatch() []Group {
 		}
 		for _, p := range g.Players() {
 			if !p.IsAi() {
-				p.ForceCancelMatch()
+				p.ForceCancelMatch(CancelMatchByServerStop)
 			}
 		}
 		g.SetState(GroupStateUnready)

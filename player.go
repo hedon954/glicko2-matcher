@@ -42,7 +42,7 @@ type Player interface {
 	SetRank(rank int)
 
 	// 强制退出时对每个玩家的处理逻辑
-	ForceCancelMatch()
+	ForceCancelMatch(reason string)
 
 	// glicko-2 算法的玩家抽象示例
 	GlickoPlayer() *glicko.Player
